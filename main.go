@@ -4,14 +4,20 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"liansushe/ao"
+	"liansushe/config"
 	"liansushe/dao"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	config.Init()
+
 	r := gin.Default()
 	r.Delims("{!{", "}!}")
 	r.LoadHTMLFiles("./dist/index.html")
@@ -27,7 +33,8 @@ func main() {
 	r.POST("/register", register)
 	r.POST("/house/search", houseSearch)
 	r.POST("/house/add", houseAdd)
-
+	r.POST("/image/:uuid", uploadImage)
+	r.GET("/image/:uuid", getImage)
 	r.Run("127.0.0.1:9000")
 }
 
@@ -73,7 +80,6 @@ func login(c *gin.Context) {
 }
 
 func register(c *gin.Context) {
-
 	req := dao.RegisterReq{}
 	err := parseReq(c, &req)
 	if err != nil {
@@ -89,7 +95,6 @@ func register(c *gin.Context) {
 }
 
 func houseSearch(c *gin.Context) {
-
 	req := dao.HouseSearchReq{}
 	err := parseReq(c, &req)
 	if err != nil {
@@ -140,4 +145,32 @@ func houseAdd(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"Result": res,
 	})
+}
+
+func uploadImage(c *gin.Context) {
+	uuid := c.Param("uuid")
+	f, err := c.FormFile("file")
+	log.Println(c.ContentType(), f.Filename, f.Header, f.Size)
+	if err != nil || f.Filename == "" {
+		log.Println("[image]", err, " or fileName is empty")
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	// get path
+	fNames := strings.Split(f.Filename, ".")
+	fName := uuid + "." + fNames[len(fNames)-1]
+	path := filepath.Join(config.C.ImgPath, fName)
+	dao.UUID2ImagePath[uuid] = path
+	log.Println(path)
+
+	os.MkdirAll(config.C.ImgPath, os.FileMode(0777))
+	c.SaveUploadedFile(f, path)
+	c.Status(http.StatusOK)
+}
+
+func getImage(c *gin.Context) {
+	uuid := c.Param("uuid")
+	fPath := dao.UUID2ImagePath[uuid]
+	c.File(fPath)
 }

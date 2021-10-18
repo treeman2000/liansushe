@@ -34,7 +34,7 @@ func (i *AO) HouseAdd(req *dao.HouseAddReq) (Result string, err error) {
 	//convert 2 houseInfo
 	houseInfo := &dao.HouseInfo{
 		HouseID:   req.HouseID,
-		ImgURL:    req.Image,
+		ImgURL:    "/image/" + req.Image,
 		VRURL:     req.VRFile,
 		Place:     req.Place,
 		Center:    req.Center,
