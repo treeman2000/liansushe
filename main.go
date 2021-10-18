@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
+	"liansushe/ao"
+	"liansushe/dao"
 	"log"
 	"net/http"
 
@@ -20,9 +22,11 @@ func main() {
 	r.StaticFS("/fonts", http.Dir("./dist/fonts"))
 	r.StaticFS("/src", http.Dir("./src"))
 	r.GET("/", getIndex)
+
 	r.POST("/login", login)
 	r.POST("/register", register)
 	r.POST("/house/search", houseSearch)
+	r.POST("/house/add", houseAdd)
 
 	r.Run("127.0.0.1:9000")
 }
@@ -41,6 +45,7 @@ func parseReq(c *gin.Context, p interface{}) error {
 	err = json.Unmarshal(bodyBytes, p)
 	if err != nil {
 		log.Println("[parseReq]", err)
+		log.Println(string(bodyBytes))
 		c.Status(http.StatusInternalServerError)
 		return err
 	}
@@ -49,114 +54,90 @@ func parseReq(c *gin.Context, p interface{}) error {
 }
 
 func login(c *gin.Context) {
-	type Req struct {
-		UserID   string
-		Password string
-	}
-	req := Req{}
+	req := dao.LoginReq{}
 	err := parseReq(c, &req)
 	if err != nil {
 		return
 	}
-	if req.UserID == "777" {
-		c.JSON(http.StatusOK, gin.H{
-			"Result":   "OK",
-			"Token":    "token123",
-			"UserName": "nanami",
-		})
-	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"Result": "该用户不存在",
-		})
+	rsp, err := ao.Ao.Login(&req)
+	if err != nil {
+		log.Println("[login]", err)
+		return
 	}
+	c.JSON(http.StatusOK, gin.H{
+		"Result":   rsp.Result,
+		"Token":    rsp.Token,
+		"UserName": rsp.UserName,
+	})
 	log.Println("[login] success")
 }
 
 func register(c *gin.Context) {
-	type Req struct {
-		UserName string
-		UserID   string
-		Password string
-	}
-	req := Req{}
+
+	req := dao.RegisterReq{}
 	err := parseReq(c, &req)
 	if err != nil {
 		return
 	}
-	if req.UserName == "" || req.UserID == "" || req.Password == "" {
-		c.JSON(http.StatusOK, gin.H{
-			"Result": "请填写完整",
-		})
-	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"Result": "OK",
-		})
+	res, err := ao.Ao.Register(&req)
+	if err != nil {
+		return
 	}
+	c.JSON(http.StatusOK, gin.H{
+		"Result": res,
+	})
 }
 
 func houseSearch(c *gin.Context) {
-	type Req struct {
-		PageSize int
-		PageNum  int
-		RoomNum  []int
-		MinPrice int
-		MaxPrice int
-		Center   []string
-		MinTerm  int
-		MaxTerm  int
-	}
-	type Rsp struct {
-		HouseID   int
-		ImgURL    string
-		VRURL     string
-		Place     string
-		Center    string
-		Area      int
-		Price     int
-		Deposit   int
-		Room      int
-		Hall      int
-		Elevator  bool
-		Storey    int
-		Term      int
-		Direction string
-		Facility  int
-		Note      string
-		IsOnline  bool
-	}
-	req := Req{}
+
+	req := dao.HouseSearchReq{}
 	err := parseReq(c, &req)
 	if err != nil {
 		return
 	}
-	houseInfo := Rsp{
-		HouseID:   1,
-		ImgURL:    "./src/assets/logo.png",
-		VRURL:     "vurl",
-		Place:     "我家",
-		Center:    "环球港",
-		Area:      200,
-		Price:     5000,
-		Deposit:   9000,
-		Room:      2,
-		Hall:      5,
-		Elevator:  true,
-		Storey:    3,
-		Term:      6,
-		Direction: "东南",
-		Facility:  15,
-		Note:      "test",
-		IsOnline:  true,
-	}
-	houseInfos := make([]Rsp, 0)
-	for i := 0; i < req.PageSize; i++ {
-		houseInfo.HouseID++
-		houseInfo.Price = 1000*req.PageNum + i
-		houseInfos = append(houseInfos, houseInfo)
-	}
+	// houseInfo := dao.HouseInfo{
+	// 	HouseID:   1,
+	// 	ImgURL:    "./src/assets/logo.png",
+	// 	VRURL:     "vurl",
+	// 	Place:     "我家",
+	// 	Center:    "环球港",
+	// 	Area:      200,
+	// 	Price:     5000,
+	// 	Deposit:   9000,
+	// 	Room:      2,
+	// 	Hall:      5,
+	// 	Elevator:  true,
+	// 	Storey:    3,
+	// 	Term:      6,
+	// 	Direction: "东南",
+	// 	Facility:  15,
+	// 	Note:      "test",
+	// 	IsOnline:  true,
+	// }
+	// for i := 0; i < req.PageSize; i++ {
+	// 	houseInfo.HouseID++
+	// 	houseInfo.Price = 1000*req.PageNum + i
+	// 	houseInfos = append(houseInfos, houseInfo)
+	// }
 	c.JSON(http.StatusOK, gin.H{
 		"Result":     "OK",
-		"Number":     50,
-		"HouseInfos": houseInfos,
+		"Number":     len(dao.HouseInfos),
+		"HouseInfos": dao.HouseInfos,
+	})
+}
+
+func houseAdd(c *gin.Context) {
+	req := dao.HouseAddReq{}
+	err := parseReq(c, &req)
+	if err != nil {
+		return
+	}
+
+	res, err := ao.Ao.HouseAdd(&req)
+	if err != nil {
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"Result": res,
 	})
 }

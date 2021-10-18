@@ -1,4 +1,4 @@
-module liansushe-mock
+module liansushe
 
 go 1.15
 
