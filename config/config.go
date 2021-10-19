@@ -10,6 +10,7 @@ import (
 
 type Config struct {
 	ImgPath string
+	Addr    string
 }
 
 var C Config
@@ -20,16 +21,17 @@ func Init() error {
 	if *useConfigFile == "" {
 		C = Config{
 			ImgPath: "img",
+			Addr:    "127.0.0.1:9000",
 		}
 	} else {
-		initWithConfigFile()
+		initWithConfigFile(*useConfigFile)
 	}
 	log.Printf("%#v", C)
 	return nil
 }
 
-func initWithConfigFile() error {
-	f, err := os.Open("config.json")
+func initWithConfigFile(configFile string) error {
+	f, err := os.Open(configFile)
 	if err != nil {
 		log.Println("[config.Init] err", err)
 		return err

@@ -1,3 +1,4 @@
 {
-    "ImgPath":"img"
+    "ImgPath":"img",
+    "Addr":"0.0.0.0:9000"
 }

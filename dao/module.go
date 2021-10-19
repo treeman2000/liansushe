@@ -67,3 +67,13 @@ type HouseAddReq struct {
 	Facility  int
 	Note      string
 }
+
+type SetOnlineReq struct {
+	Token   string
+	HouseID string
+}
+
+type SetOfflineReq struct {
+	Token   string
+	HouseID string
+}

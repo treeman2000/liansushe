@@ -2,6 +2,8 @@ package ao
 
 import (
 	"liansushe/dao"
+	"log"
+	"strconv"
 )
 
 type AO struct{}
@@ -53,5 +55,33 @@ func (i *AO) HouseAdd(req *dao.HouseAddReq) (Result string, err error) {
 	}
 
 	dao.HouseInfos = append(dao.HouseInfos, *houseInfo)
+	return "OK", nil
+}
+
+func (i *AO) SetOnline(req *dao.SetOnlineReq) (Result string, err error) {
+	houseID, err := strconv.Atoi(req.HouseID)
+	if err != nil {
+		log.Println("[SetOnline]", err)
+		return err.Error(), err
+	}
+	for i, houseInfo := range dao.HouseInfos {
+		if houseInfo.HouseID == houseID {
+			dao.HouseInfos[i].IsOnline = true
+		}
+	}
+	return "OK", nil
+}
+
+func (i *AO) SetOffline(req *dao.SetOfflineReq) (Result string, err error) {
+	houseID, err := strconv.Atoi(req.HouseID)
+	if err != nil {
+		log.Println("[SetOffline]", err)
+		return err.Error(), err
+	}
+	for i, houseInfo := range dao.HouseInfos {
+		if houseInfo.HouseID == houseID {
+			dao.HouseInfos[i].IsOnline = false
+		}
+	}
 	return "OK", nil
 }

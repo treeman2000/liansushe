@@ -35,7 +35,10 @@ func main() {
 	r.POST("/house/add", houseAdd)
 	r.POST("/image/:uuid", uploadImage)
 	r.GET("/image/:uuid", getImage)
-	r.Run("127.0.0.1:9000")
+	r.POST("/house/set_online", setOnline)
+	r.POST("/house/set_offline", setOffline)
+
+	r.Run(config.C.Addr)
 }
 
 func getIndex(c *gin.Context) {
@@ -173,4 +176,36 @@ func getImage(c *gin.Context) {
 	uuid := c.Param("uuid")
 	fPath := dao.UUID2ImagePath[uuid]
 	c.File(fPath)
+}
+
+func setOnline(c *gin.Context) {
+	req := dao.SetOnlineReq{}
+	err := parseReq(c, &req)
+	if err != nil {
+		return
+	}
+
+	res, err := ao.Ao.SetOnline(&req)
+	if err != nil {
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"Result": res,
+	})
+}
+
+func setOffline(c *gin.Context) {
+	req := dao.SetOfflineReq{}
+	err := parseReq(c, &req)
+	if err != nil {
+		return
+	}
+
+	res, err := ao.Ao.SetOffline(&req)
+	if err != nil {
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"Result": res,
+	})
 }
