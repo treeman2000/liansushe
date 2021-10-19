@@ -26,6 +26,8 @@ type HouseSearchReq struct {
 	Center   []string
 	MinTerm  int
 	MaxTerm  int
+	State    string
+	UserID   string
 }
 
 type HouseInfo struct {
@@ -48,9 +50,35 @@ type HouseInfo struct {
 	IsOnline  bool
 }
 
+type H []*HouseInfo
+
+func (o H) FilterPrice(h *HouseSearchReq) H {
+	res := make(H, 0)
+	for _, hInfo := range o {
+		if hInfo.Price >= h.MinPrice && (h.MaxPrice == 0 || hInfo.Price <= h.MaxPrice) {
+			res = append(res, hInfo)
+		}
+	}
+	return res
+}
+
+func (o H) FilterIsOnline(h *HouseSearchReq) H {
+	if h.State == "all" {
+		return o
+	}
+	res := make(H, 0)
+	for _, hInfo := range o {
+		if (h.State == "online" || h.State == "") && hInfo.IsOnline {
+			res = append(res, hInfo)
+		} else if h.State == "offline" && !hInfo.IsOnline {
+			res = append(res, hInfo)
+		}
+	}
+	return res
+}
+
 type HouseAddReq struct {
 	Token     string
-	HouseID   int
 	Image     string
 	VRFile    string
 	Place     string
@@ -70,10 +98,10 @@ type HouseAddReq struct {
 
 type SetOnlineReq struct {
 	Token   string
-	HouseID string
+	HouseID int
 }
 
 type SetOfflineReq struct {
 	Token   string
-	HouseID string
+	HouseID int
 }

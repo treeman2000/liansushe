@@ -3,7 +3,7 @@ package ao
 import (
 	"liansushe/dao"
 	"log"
-	"strconv"
+	"time"
 )
 
 type AO struct{}
@@ -35,7 +35,7 @@ func (o *AO) Register(req *dao.RegisterReq) (Result string, err error) {
 func (i *AO) HouseAdd(req *dao.HouseAddReq) (Result string, err error) {
 	//convert 2 houseInfo
 	houseInfo := &dao.HouseInfo{
-		HouseID:   req.HouseID,
+		HouseID:   int(time.Now().UnixNano()),
 		ImgURL:    "/image/" + req.Image,
 		VRURL:     req.VRFile,
 		Place:     req.Place,
@@ -54,18 +54,18 @@ func (i *AO) HouseAdd(req *dao.HouseAddReq) (Result string, err error) {
 		IsOnline:  true,
 	}
 
-	dao.HouseInfos = append(dao.HouseInfos, *houseInfo)
+	dao.HouseInfos = append(dao.HouseInfos, houseInfo)
 	return "OK", nil
 }
 
 func (i *AO) SetOnline(req *dao.SetOnlineReq) (Result string, err error) {
-	houseID, err := strconv.Atoi(req.HouseID)
+	// houseID, err := strconv.Atoi(req.HouseID)
 	if err != nil {
 		log.Println("[SetOnline]", err)
 		return err.Error(), err
 	}
 	for i, houseInfo := range dao.HouseInfos {
-		if houseInfo.HouseID == houseID {
+		if houseInfo.HouseID == req.HouseID {
 			dao.HouseInfos[i].IsOnline = true
 		}
 	}
@@ -73,15 +73,19 @@ func (i *AO) SetOnline(req *dao.SetOnlineReq) (Result string, err error) {
 }
 
 func (i *AO) SetOffline(req *dao.SetOfflineReq) (Result string, err error) {
-	houseID, err := strconv.Atoi(req.HouseID)
+	// houseID, err := strconv.Atoi(req.HouseID)
 	if err != nil {
 		log.Println("[SetOffline]", err)
 		return err.Error(), err
 	}
 	for i, houseInfo := range dao.HouseInfos {
-		if houseInfo.HouseID == houseID {
+		if houseInfo.HouseID == req.HouseID {
 			dao.HouseInfos[i].IsOnline = false
 		}
 	}
 	return "OK", nil
+}
+
+func (i *AO) HouseSearch(req *dao.HouseSearchReq) (dao.H, error) {
+	return dao.HouseInfos.FilterPrice(req).FilterIsOnline(req), nil
 }

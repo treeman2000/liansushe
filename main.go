@@ -127,10 +127,14 @@ func houseSearch(c *gin.Context) {
 	// 	houseInfo.Price = 1000*req.PageNum + i
 	// 	houseInfos = append(houseInfos, houseInfo)
 	// }
+	res, err := ao.Ao.HouseSearch(&req)
+	if err != nil {
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"Result":     "OK",
-		"Number":     len(dao.HouseInfos),
-		"HouseInfos": dao.HouseInfos,
+		"Number":     len(res),
+		"HouseInfos": res,
 	})
 }
 
