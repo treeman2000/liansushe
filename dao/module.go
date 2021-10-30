@@ -105,3 +105,34 @@ type SetOfflineReq struct {
 	Token   string
 	HouseID int
 }
+
+type VerifyReq struct {
+	EmailAddress string
+}
+
+type RegisterV2Req struct {
+	UserName         string
+	EmailAddress     string
+	Password         string
+	VerificationCode string
+}
+
+type CollectionChangeReq struct {
+	Token     string
+	UserID    string
+	HouseID   int
+	SetOnline bool
+}
+
+type CollectionSearchReq struct {
+	Token    string
+	PageSize int
+	PageNum  int
+	UserID   string
+}
+
+type CollectionSearchRsp struct {
+	Result     string
+	Number     int
+	HouseInfos HouseInfo
+}

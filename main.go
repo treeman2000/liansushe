@@ -29,6 +29,7 @@ func main() {
 	r.StaticFS("/src", http.Dir("./src"))
 	r.GET("/", getIndex)
 
+	// sprint1
 	r.POST("/login", login)
 	r.POST("/register", register)
 	r.POST("/house/search", houseSearch)
@@ -37,6 +38,12 @@ func main() {
 	r.GET("/image/:uuid", getImage)
 	r.POST("/house/set_online", setOnline)
 	r.POST("/house/set_offline", setOffline)
+
+	// sprint2
+	r.POST("/register/v2", registerV2)
+	r.POST("/verify", verify)
+	r.POST("/collection/change", collectionChange)
+	r.POST("/collection/search", collectionSearch)
 
 	r.Run(config.C.Addr)
 }
@@ -212,4 +219,20 @@ func setOffline(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"Result": res,
 	})
+}
+
+func registerV2(c *gin.Context) {
+
+}
+
+func verify(c *gin.Context) {
+
+}
+
+func collectionChange(c *gin.Context) {
+
+}
+
+func collectionSearch(c *gin.Context) {
+
 }
