@@ -17,12 +17,6 @@ var Ao = &AO{}
 
 func (o *AO) Login(req *dao.LoginReq) (rsp *dao.LoginRsp, err error) {
 	rsp = &dao.LoginRsp{}
-	// 便于测试
-	if req.UserID == "" || req.Password == "" {
-		rsp.Result = "OK"
-		rsp.UserName = "测试用户"
-		return rsp, nil
-	}
 	if dao.UserID2PwdMap[req.UserID] == req.Password {
 		rsp.Result = "OK"
 		rsp.Token = req.UserID + "_" + req.Password
@@ -98,7 +92,7 @@ func (i *AO) SetOffline(req *dao.SetOfflineReq) (Result string, err error) {
 }
 
 func (i *AO) HouseSearch(req *dao.HouseSearchReq) (dao.H, error) {
-	return dao.HouseInfos.FilterPrice(req).FilterIsOnline(req), nil
+	return dao.HouseInfos.Price(req.MinPrice, req.MaxPrice).IsOnline(req.State), nil
 }
 
 func (i *AO) RegisterV2(req *dao.RegisterV2Req) (string, error) {
@@ -132,4 +126,28 @@ func (i *AO) Verify(req *dao.VerifyReq) (string, error) {
 		return err.Error(), err
 	}
 	return "OK", nil
+}
+
+func (i *AO) CollectionChange(req *dao.CollectionChangeReq) (string, error) {
+	if req.SetOnline {
+		dao.Collection[req.UserID] = append(dao.Collection[req.UserID], req.HouseID)
+	} else {
+		newCollection := make([]int, 0)
+		for _, hID := range dao.Collection[req.UserID] {
+			if hID != req.HouseID {
+				newCollection = append(newCollection, hID)
+			}
+		}
+		dao.Collection[req.UserID] = newCollection
+	}
+	return "OK", nil
+}
+
+func (i *AO) CollectionSearch(req *dao.CollectionSearchReq) (*dao.CollectionSearchRsp, error) {
+	rsp := &dao.CollectionSearchRsp{}
+	houseIDs := dao.Collection[req.UserID]
+	rsp.HouseInfos = dao.HouseInfos.IsOnline("online").HouseIDs(houseIDs...)
+	rsp.Number = len(houseIDs)
+	rsp.Result = "OK"
+	return rsp, nil
 }

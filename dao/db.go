@@ -7,6 +7,11 @@ func init() {
 	HouseInfos = make(H, 0)
 	UUID2ImagePath = make(map[string]string)
 	UserID2VerifyCode = make(map[string]string)
+	Collection = make(map[string][]int)
+
+	// 便于测试
+	UserID2NameMap["defaultID"] = "defaultUser"
+	UserID2PwdMap["defaultID"] = "defaultPwd"
 }
 
 var Tokens map[string]string
@@ -20,3 +25,5 @@ var HouseInfos H
 var UUID2ImagePath map[string]string
 
 var UserID2VerifyCode map[string]string
+
+var Collection map[string][]int

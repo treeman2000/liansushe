@@ -47,7 +47,7 @@ func main() {
 	r.POST("/verify", verify)
 	r.POST("/collection/change", collectionChange)
 	r.POST("/collection/search", collectionSearch)
-
+	r.GET("/vr/:imageName", vrHandler)
 	r.Run(config.C.Addr)
 }
 
@@ -69,7 +69,7 @@ func parseReq(c *gin.Context, p interface{}) error {
 		c.Status(http.StatusInternalServerError)
 		return err
 	}
-	log.Printf("%#v", p)
+	log.Printf("jsonString is %#v", p)
 	return nil
 }
 
@@ -255,9 +255,39 @@ func verify(c *gin.Context) {
 }
 
 func collectionChange(c *gin.Context) {
-
+	req := dao.CollectionChangeReq{}
+	err := parseReq(c, &req)
+	if err != nil {
+		return
+	}
+	res, err := ao.Ao.CollectionChange(&req)
+	if err != nil {
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"Result": res,
+	})
 }
 
 func collectionSearch(c *gin.Context) {
+	req := dao.CollectionSearchReq{}
+	err := parseReq(c, &req)
+	if err != nil {
+		return
+	}
+	res, err := ao.Ao.CollectionSearch(&req)
+	if err != nil {
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"Result":     res.Result,
+		"Number":     res.Number,
+		"HouseInfos": res.HouseInfos,
+	})
+}
 
+func vrHandler(c *gin.Context) {
+	imageName := c.Param("imageName")
+	filePath := filepath.Join("vr", imageName)
+	c.File(filePath)
 }

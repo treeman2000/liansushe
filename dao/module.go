@@ -1,5 +1,7 @@
 package dao
 
+import "log"
+
 type LoginReq struct {
 	UserID   string
 	Password string
@@ -52,25 +54,41 @@ type HouseInfo struct {
 
 type H []*HouseInfo
 
-func (o H) FilterPrice(h *HouseSearchReq) H {
+func (o H) Price(MinPrice, MaxPrice int) H {
 	res := make(H, 0)
 	for _, hInfo := range o {
-		if hInfo.Price >= h.MinPrice && (h.MaxPrice == 0 || hInfo.Price <= h.MaxPrice) {
+		if hInfo.Price >= MinPrice && (MaxPrice == 0 || hInfo.Price <= MaxPrice) {
 			res = append(res, hInfo)
 		}
 	}
 	return res
 }
 
-func (o H) FilterIsOnline(h *HouseSearchReq) H {
-	if h.State == "all" {
+func (o H) IsOnline(State string) H {
+	if State == "all" {
 		return o
 	}
 	res := make(H, 0)
 	for _, hInfo := range o {
-		if (h.State == "online" || h.State == "") && hInfo.IsOnline {
+		if (State == "online" || State == "") && hInfo.IsOnline {
 			res = append(res, hInfo)
-		} else if h.State == "offline" && !hInfo.IsOnline {
+		} else if State == "offline" && !hInfo.IsOnline {
+			res = append(res, hInfo)
+		}
+	}
+	return res
+}
+
+func (o H) HouseIDs(houseID ...int) H {
+	idMap := make(map[int]bool)
+	for _, hID := range houseID {
+		log.Printf("need %v\n", hID)
+		idMap[hID] = true
+	}
+	res := make(H, 0)
+	for _, hInfo := range o {
+		log.Printf("has %v\n", hInfo.HouseID)
+		if idMap[hInfo.HouseID] {
 			res = append(res, hInfo)
 		}
 	}
