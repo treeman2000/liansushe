@@ -2,29 +2,34 @@ package config
 
 import (
 	"encoding/json"
-	"flag"
 	"io/ioutil"
 	"log"
 	"os"
 )
 
 type Config struct {
-	ImgPath string
-	Addr    string
+	ImgPath     string
+	Addr        string
+	MailAddress string
+	MailPwd     string
+	MailHost    string
+	MailPort    int
 }
 
 var C Config
 
-func Init() error {
-	useConfigFile := flag.String("c", "", "-c + 配置文件的文件名")
-	flag.Parse()
-	if *useConfigFile == "" {
+func Init(configFileName string) error {
+	if configFileName == "" {
 		C = Config{
-			ImgPath: "img",
-			Addr:    "127.0.0.1:9000",
+			ImgPath:     "img",
+			Addr:        "127.0.0.1:9000",
+			MailAddress: "1254312584@qq.com",
+			MailPwd:     "ggbreadypudnhjja",
+			MailHost:    "smtp.qq.com",
+			MailPort:    465,
 		}
 	} else {
-		initWithConfigFile(*useConfigFile)
+		initWithConfigFile(configFileName)
 	}
 	log.Printf("%#v", C)
 	return nil

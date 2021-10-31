@@ -110,6 +110,11 @@ type VerifyReq struct {
 	EmailAddress string
 }
 
+type VerifyRsp struct {
+	Result           string
+	VerificationCode string
+}
+
 type RegisterV2Req struct {
 	UserName         string
 	EmailAddress     string
@@ -134,5 +139,5 @@ type CollectionSearchReq struct {
 type CollectionSearchRsp struct {
 	Result     string
 	Number     int
-	HouseInfos HouseInfo
+	HouseInfos H
 }

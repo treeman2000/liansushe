@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"io/ioutil"
 	"liansushe/ao"
 	"liansushe/config"
@@ -16,7 +17,9 @@ import (
 )
 
 func main() {
-	config.Init()
+	configFileName := flag.String("c", "", "-c + 配置文件的文件名")
+	flag.Parse()
+	config.Init(*configFileName)
 
 	r := gin.Default()
 	r.Delims("{!{", "}!}")
@@ -222,11 +225,33 @@ func setOffline(c *gin.Context) {
 }
 
 func registerV2(c *gin.Context) {
-
+	req := dao.RegisterV2Req{}
+	err := parseReq(c, &req)
+	if err != nil {
+		return
+	}
+	res, err := ao.Ao.RegisterV2(&req)
+	if err != nil {
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"Result": res,
+	})
 }
 
 func verify(c *gin.Context) {
-
+	req := dao.VerifyReq{}
+	err := parseReq(c, &req)
+	if err != nil {
+		return
+	}
+	res, err := ao.Ao.Verify(&req)
+	if err != nil {
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"Result": res,
+	})
 }
 
 func collectionChange(c *gin.Context) {
