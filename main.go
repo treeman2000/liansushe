@@ -47,7 +47,7 @@ func main() {
 	r.POST("/verify", verify)
 	r.POST("/collection/change", collectionChange)
 	r.POST("/collection/search", collectionSearch)
-	r.GET("/vr/:imageName", vrHandler)
+	r.GET("/vr/:fileName", vrHandler)
 	r.Run(config.C.Addr)
 }
 
@@ -287,7 +287,7 @@ func collectionSearch(c *gin.Context) {
 }
 
 func vrHandler(c *gin.Context) {
-	imageName := c.Param("imageName")
+	imageName := c.Param("fileName")
 	filePath := filepath.Join("vr", imageName)
 	c.File(filePath)
 }
