@@ -13,7 +13,8 @@ type Config struct {
 	MailAddress string
 	MailPwd     string
 	MailHost    string
-	MailPort    int
+	MailPort    int32
+	AvatarPath  string
 }
 
 var C Config
@@ -27,6 +28,7 @@ func Init(configFileName string) error {
 			MailPwd:     "ggbreadypudnhjja",
 			MailHost:    "smtp.qq.com",
 			MailPort:    465,
+			AvatarPath:  "avatar",
 		}
 	} else {
 		initWithConfigFile(configFileName)

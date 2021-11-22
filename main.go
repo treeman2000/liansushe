@@ -48,6 +48,15 @@ func main() {
 	r.POST("/collection/change", collectionChange)
 	r.POST("/collection/search", collectionSearch)
 	r.GET("/vr/:fileName", vrHandler)
+
+	// sprint3
+	r.POST("/profile/add", profileAdd)
+	r.POST("/profile/get", profileGet)
+	r.POST("/profile/add_avatar/:user_id", addAvatar)
+	r.StaticFS("/profile/get_avatar", http.Dir("./avatar"))
+	r.POST("/house/get", houseGet)
+	r.POST("/profile/search", profileSearch)
+
 	r.Run(config.C.Addr)
 }
 
@@ -290,4 +299,95 @@ func vrHandler(c *gin.Context) {
 	imageName := c.Param("fileName")
 	filePath := filepath.Join("vr", imageName)
 	c.File(filePath)
+}
+
+func profileAdd(c *gin.Context) {
+	req := dao.ProfileAddReq{}
+	err := parseReq(c, &req)
+	if err != nil {
+		return
+	}
+	res, err := ao.Ao.ProfileAdd(&req)
+	if err != nil {
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"Result": res,
+	})
+}
+
+func profileGet(c *gin.Context) {
+	req := dao.ProfileGetReq{}
+	err := parseReq(c, &req)
+	if err != nil {
+		return
+	}
+	res, err := ao.Ao.ProfileGet(&req)
+	if err != nil {
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"Result":  "OK",
+		"Profile": res,
+	})
+}
+
+func addAvatar(c *gin.Context) {
+	userID := c.Param("user_id")
+	f, err := c.FormFile("file")
+	log.Println(c.ContentType(), f.Filename, f.Header, f.Size)
+	if err != nil || f.Filename == "" {
+		log.Println("[addAvatar]", err, " or fileName is empty")
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	// get path: avatar/userID.jpg
+	fNames := strings.Split(f.Filename, ".")
+	fName := userID + "." + fNames[len(fNames)-1]
+	path := filepath.Join(config.C.AvatarPath, fName)
+	log.Println(path)
+
+	os.MkdirAll(config.C.AvatarPath, os.FileMode(0777))
+	c.SaveUploadedFile(f, path)
+
+	//write profile.avatarURL
+	newProfile := dao.Profiles[userID]
+	newProfile.AvatarURL = "/profile/get_avatar/" + fName
+	dao.Profiles[userID] = newProfile
+
+	c.Status(http.StatusOK)
+}
+
+func houseGet(c *gin.Context) {
+	req := dao.HouseGetReq{}
+	err := parseReq(c, &req)
+	if err != nil {
+		return
+	}
+	res, err := ao.Ao.HouseGet(&req)
+	if err != nil {
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"Result":    "OK",
+		"HouseInfo": res,
+	})
+}
+
+func profileSearch(c *gin.Context) {
+	req := dao.ProfileSearchReq{}
+	err := parseReq(c, &req)
+	if err != nil {
+		return
+	}
+	res, err := ao.Ao.ProfileSearch(&req)
+	if err != nil {
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"Result":   res.Result,
+		"Number":   res.Number,
+		"Profiles": res.Profiles,
+	})
 }

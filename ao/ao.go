@@ -39,8 +39,12 @@ func (o *AO) Register(req *dao.RegisterReq) (Result string, err error) {
 
 func (i *AO) HouseAdd(req *dao.HouseAddReq) (Result string, err error) {
 	//convert 2 houseInfo
+	HouseID := int32(time.Now().UnixNano())
+	if HouseID < 0 {
+		HouseID *= -1
+	}
 	houseInfo := &dao.HouseInfo{
-		HouseID:   int(time.Now().UnixNano()),
+		HouseID:   HouseID,
 		ImgURL:    "/image/" + req.Image,
 		VRURL:     req.VRFile,
 		Place:     req.Place,
@@ -95,6 +99,10 @@ func (i *AO) HouseSearch(req *dao.HouseSearchReq) (dao.H, error) {
 	return dao.HouseInfos.Price(req.MinPrice, req.MaxPrice).IsOnline(req.State), nil
 }
 
+func (i *AO) HouseGet(req *dao.HouseGetReq) (*dao.HouseInfo, error) {
+	return dao.HouseInfos.HouseIDs(req.HouseID)[0], nil
+}
+
 func (i *AO) RegisterV2(req *dao.RegisterV2Req) (string, error) {
 	if req.UserName == "" || req.EmailAddress == "" || req.Password == "" {
 		return "请填写完整", nil
@@ -119,7 +127,7 @@ func (i *AO) Verify(req *dao.VerifyReq) (string, error) {
 	m.SetHeader("Subject", "验证码-租房平台")
 	m.SetBody("text/html", fmt.Sprintf("您的验证码为：%v", VerifyCode))
 
-	d := gomail.NewDialer(config.C.MailHost, config.C.MailPort, config.C.MailAddress, config.C.MailPwd)
+	d := gomail.NewDialer(config.C.MailHost, int(config.C.MailPort), config.C.MailAddress, config.C.MailPwd)
 	err := d.DialAndSend(m)
 	if err != nil {
 		log.Println("[Verify]", err)
@@ -132,7 +140,7 @@ func (i *AO) CollectionChange(req *dao.CollectionChangeReq) (string, error) {
 	if req.SetOnline {
 		dao.Collection[req.UserID] = append(dao.Collection[req.UserID], req.HouseID)
 	} else {
-		newCollection := make([]int, 0)
+		newCollection := make([]int32, 0)
 		for _, hID := range dao.Collection[req.UserID] {
 			if hID != req.HouseID {
 				newCollection = append(newCollection, hID)
@@ -147,7 +155,33 @@ func (i *AO) CollectionSearch(req *dao.CollectionSearchReq) (*dao.CollectionSear
 	rsp := &dao.CollectionSearchRsp{}
 	houseIDs := dao.Collection[req.UserID]
 	rsp.HouseInfos = dao.HouseInfos.IsOnline("online").HouseIDs(houseIDs...)
-	rsp.Number = len(houseIDs)
+	rsp.Number = int32(len(houseIDs))
 	rsp.Result = "OK"
+	return rsp, nil
+}
+
+func (i *AO) ProfileAdd(req *dao.ProfileAddReq) (string, error) {
+	// 维护先前已经添加进来的avatarURL
+	req.Profile.AvatarURL = dao.Profiles[req.Profile.UserID].AvatarURL
+	dao.Profiles[req.Profile.UserID] = req.Profile
+	fmt.Println("[ProfileAdd]", "id", req.Profile.UserID, dao.Profiles[req.Profile.UserID])
+	return "OK", nil
+}
+
+func (i *AO) ProfileGet(req *dao.ProfileGetReq) (*dao.Profile, error) {
+	res := dao.Profiles[req.UserID]
+	return &res, nil
+}
+
+func (i *AO) ProfileSearch(req *dao.ProfileSearchReq) (*dao.ProfileSearchRsp, error) {
+	ps := make([]dao.Profile, 0)
+	for _, p := range dao.Profiles {
+		ps = append(ps, p)
+	}
+	rsp := &dao.ProfileSearchRsp{
+		Result:   "OK",
+		Number:   int32(len(dao.Profiles)),
+		Profiles: ps,
+	}
 	return rsp, nil
 }
