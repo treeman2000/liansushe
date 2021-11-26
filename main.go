@@ -5,6 +5,7 @@ import (
 	"flag"
 	"io/ioutil"
 	"liansushe/ao"
+	"liansushe/chatManager"
 	"liansushe/config"
 	"liansushe/dao"
 	"log"
@@ -14,6 +15,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"github.com/tidwall/gjson"
 )
 
 func main() {
@@ -56,6 +59,8 @@ func main() {
 	r.StaticFS("/profile/get_avatar", http.Dir("./avatar"))
 	r.POST("/house/get", houseGet)
 	r.POST("/profile/search", profileSearch)
+
+	r.GET("/chat/:user_id/:target_user_id", chat)
 
 	r.Run(config.C.Addr)
 }
@@ -390,4 +395,36 @@ func profileSearch(c *gin.Context) {
 		"Number":   res.Number,
 		"Profiles": res.Profiles,
 	})
+}
+
+func chat(c *gin.Context) {
+	log.Println("[chat]", c.Param("user_id"), c.Param("target_user_id"))
+	userID := c.Param("user_id")
+	targetUserID := c.Param("target_user_id")
+	upgrader := websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+	}
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		log.Println("[chat]", err)
+		return
+	}
+	chatManager.Register(userID, targetUserID, conn)
+	// 发前5条消息
+	for {
+		messageType, p, err := conn.ReadMessage()
+		if err != nil {
+			log.Println("[chat]", err)
+			break
+		}
+		log.Println("[messageType]", messageType)
+		message := gjson.GetBytes(p, "Message").String()
+		if err != nil {
+			log.Println("[chat]", err)
+			continue
+		}
+		chatManager.RecvMessage(userID, targetUserID, message)
+	}
+	chatManager.UnRegister(userID, targetUserID)
 }
