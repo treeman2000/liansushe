@@ -60,7 +60,7 @@ func main() {
 	r.POST("/house/get", houseGet)
 	r.POST("/profile/search", profileSearch)
 
-	r.GET("/chat/:user_id/:target_user_id", chat)
+	r.GET("/chat/:user_id", chat)
 
 	r.Run(config.C.Addr)
 }
@@ -398,9 +398,8 @@ func profileSearch(c *gin.Context) {
 }
 
 func chat(c *gin.Context) {
-	log.Println("[chat]", c.Param("user_id"), c.Param("target_user_id"))
+	log.Println("[chat]", c.Param("user_id"))
 	userID := c.Param("user_id")
-	targetUserID := c.Param("target_user_id")
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -410,7 +409,7 @@ func chat(c *gin.Context) {
 		log.Println("[chat]", err)
 		return
 	}
-	chatManager.Register(userID, targetUserID, conn)
+	chatManager.Register(userID, conn)
 	// 发前5条消息
 	for {
 		messageType, p, err := conn.ReadMessage()
@@ -420,11 +419,12 @@ func chat(c *gin.Context) {
 		}
 		log.Println("[messageType]", messageType)
 		message := gjson.GetBytes(p, "Message").String()
+		targetUserID := gjson.GetBytes(p, "TargetUserID").String()
 		if err != nil {
 			log.Println("[chat]", err)
 			continue
 		}
 		chatManager.RecvMessage(userID, targetUserID, message)
 	}
-	chatManager.UnRegister(userID, targetUserID)
+	chatManager.UnRegister(userID)
 }
