@@ -213,3 +213,13 @@ type ProfileSearchRsp struct {
 	Number   int32
 	Profiles []Profile
 }
+
+type ChatListReq struct {
+	Token  string
+	UserID string
+}
+
+type PersonInfo struct {
+	UserID   string
+	UserName string
+}

@@ -2,6 +2,7 @@ package ao
 
 import (
 	"fmt"
+	"liansushe/chatManager"
 	"liansushe/config"
 	"liansushe/dao"
 	"log"
@@ -184,4 +185,8 @@ func (i *AO) ProfileSearch(req *dao.ProfileSearchReq) (*dao.ProfileSearchRsp, er
 		Profiles: ps,
 	}
 	return rsp, nil
+}
+
+func (i *AO) ChatList(req *dao.ChatListReq) ([]*dao.PersonInfo, error) {
+	return chatManager.ChatList(req.UserID)
 }

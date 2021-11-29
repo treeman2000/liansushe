@@ -19,7 +19,20 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+func dataInit() {
+	userID := "defaultID"
+	targetID := "targetID"
+	message1 := "it's a message from default user to target user"
+	message2 := "it's b message from default user to target user"
+	chatManager.RecvMessage(userID, targetID, message1)
+	chatManager.RecvMessage(userID, targetID, message2)
+	dao.UserID2NameMap[userID] = "defaultName"
+	dao.UserID2NameMap[targetID] = "targetName"
+}
+
 func main() {
+	dataInit()
+
 	configFileName := flag.String("c", "", "-c + 配置文件的文件名")
 	flag.Parse()
 	config.Init(*configFileName)
@@ -59,7 +72,7 @@ func main() {
 	r.StaticFS("/profile/get_avatar", http.Dir("./avatar"))
 	r.POST("/house/get", houseGet)
 	r.POST("/profile/search", profileSearch)
-
+	r.POST("chatlist", chatList)
 	r.GET("/chat/:user_id", chat)
 
 	r.Run(config.C.Addr)
@@ -427,4 +440,22 @@ func chat(c *gin.Context) {
 		chatManager.RecvMessage(userID, targetUserID, message)
 	}
 	chatManager.UnRegister(userID)
+}
+
+func chatList(c *gin.Context) {
+	req := dao.ChatListReq{}
+	err := parseReq(c, &req)
+	if err != nil {
+		return
+	}
+	res, err := ao.Ao.ChatList(&req)
+	if err != nil {
+		log.Println("[chatList]", err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"Result":   "OK",
+		"Number":   len(res),
+		"ChatList": res,
+	})
 }

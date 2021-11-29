@@ -103,21 +103,22 @@ func UnRegister(userID string) error {
 
 // RecveMessage 接收消息，并且发送给这个会话组中的所有成员
 func RecvMessage(userID string, targetUserID string, message string) error {
+	log.Println("[recvMessage]", userID, targetUserID, message)
 	newMessage := messageT{
 		UserID:  userID,
 		Message: message,
 	}
 	chatGroupID := createChatGroupNx(userID, targetUserID)
 	messages[chatGroupID] = append(messages[chatGroupID], newMessage)
-	sendMessage(userID, userID, message)
-	sendMessage(userID, targetUserID, message)
+	sendMessage(userID, targetUserID, userID, message)
+	sendMessage(userID, userID, targetUserID, message)
 	return nil
 }
 
-// 如果toer已注册进来的话，就发送一条消息给toer，这条消息是writer写的
-func sendMessage(writer string, toer string, message string) error {
+// 如果toer已注册进来的话，就发送一条消息给toer，这条消息是writer写的, 这个消息属于toer和chatmate的聊天
+func sendMessage(writer string, chatMate string, toer string, message string) error {
 	newMessageToSend := messageToSend{
-		UserID:   writer,
+		UserID:   chatMate,
 		UserName: dao.UserID2NameMap[writer],
 		Message:  message,
 		IsSelf:   writer == toer,
@@ -127,7 +128,7 @@ func sendMessage(writer string, toer string, message string) error {
 		log.Println("[SendMessage]", err)
 		return err
 	}
-	log.Println(string(messageB))
+	log.Println("send to", toer, "message:", string(messageB))
 	// 如果这人没注册进来就不给他发了
 	if _, ok := userID2Conn[toer]; !ok {
 		return nil
@@ -138,4 +139,15 @@ func sendMessage(writer string, toer string, message string) error {
 		return err
 	}
 	return nil
+}
+
+func ChatList(userID string) ([]*dao.PersonInfo, error) {
+	ret := make([]*dao.PersonInfo, 0)
+	for _, targetID := range chatMates[userID] {
+		ret = append(ret, &dao.PersonInfo{
+			UserID:   targetID,
+			UserName: dao.UserID2NameMap[targetID],
+		})
+	}
+	return ret, nil
 }
